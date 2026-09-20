@@ -29,8 +29,8 @@ target_link_libraries(usb_midi_host_pio_example tinyusb_host tinyusb_board usb_m
   pico_multicore tinyusb_pico_pio_usb pico_stdlib)
 
 if(DEFINED PICO_BOARD)
-if(${PICO_BOARD} MATCHES "pico_w")
-message("Adding pico_cyw43_arch_none library for pico_w")
+if(${PICO_BOARD} MATCHES "pico_w" OR ${PICO_BOARD} MATCHES "pico2_w")
+message("Adding pico_cyw43_arch_none library for pico_w/pico2_w")
 # add additional compile and link options
 target_link_libraries(usb_midi_host_pio_example pico_cyw43_arch_none)
 endif()

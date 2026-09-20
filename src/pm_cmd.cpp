@@ -29,8 +29,9 @@ If not, see <https://www.gnu.org/licenses/>.
 #include "hardware/vreg.h"
 #include "hardware/structs/bus_ctrl.h"
 #include "hardware/regs/busctrl.h"              /* Bus Priority defines */
-#if !defined(RASPBERRYPI_PICO2) && !defined(PIMORONI_PICO_PLUS2_RP2350)
-#include "hardware/regs/vreg_and_chip_reset.h"
+#if !defined(RASPBERRYPI_PICO2) && !defined(PIMORONI_PICO_PLUS2_RP2350) && !defined(RASPBERRYPI_PICO2_W)
+//TODO
+//#include "hardware/regs/vreg_and_chip_reset.h"
 #endif
 
 #if USE_SPI_PSRAM
@@ -1639,7 +1640,7 @@ void pm_display_claimed_pio_sm()
         else PM_INFO("PIO pio1 SM 3 free\n");              
 }
 
-#if defined(RASPBERRYPI_PICO2) || defined(PIMORONI_PICO_PLUS2_RP2350)
+#if defined(RASPBERRYPI_PICO2) || defined(PIMORONI_PICO_PLUS2_RP2350) || !defined(RASPBERRYPI_PICO2_W)
 
  #include "hardware/pll.h"
  #include "hardware/clocks.h"
@@ -2326,7 +2327,7 @@ if (multicore_fifo_rvalid())
 #endif
 #endif
    }
-  }             
+  }
 }
 
 }

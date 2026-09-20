@@ -1,8 +1,19 @@
 # !! Remove link of tinyusb in xinput CMakefile !!
-add_library(USB_Host_Driver INTERFACE)
-target_include_directories(USB_Host_Driver INTERFACE ${CMAKE_CURRENT_LIST_DIR})
-target_link_libraries(USB_Host_Driver INTERFACE tinyusb_board)
-target_sources(USB_Host_Driver INTERFACE
+add_library(USB_Host_Driver STATIC)
+target_include_directories(USB_Host_Driver PUBLIC
+${CMAKE_CURRENT_LIST_DIR}
+${CMAKE_SOURCE_DIR}/pm_libs
+${CMAKE_CURRENT_LIST_DIR}/../USB_Host_driver
+${CMAKE_SOURCE_DIR}/lib/tusb_xinput
+${CMAKE_SOURCE_DIR}/lib/FatFs_SPI/ff15/source)
+
+target_link_libraries(USB_Host_Driver PUBLIC
+pico_stdlib
+tinyusb_board
+tinyusb_host
+)
+
+target_sources(USB_Host_Driver PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/usbh.c
     ${CMAKE_CURRENT_LIST_DIR}/hid/hid.c
     ${CMAKE_CURRENT_LIST_DIR}/hid/hid_registry.c
@@ -31,13 +42,14 @@ target_sources(USB_Host_Driver INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/hid/devices/vendors/microsoft/ms_sidewinder_dualstrike.c
     ${CMAKE_CURRENT_LIST_DIR}/hid/devices/vendors/microsoft/ms_sidewinder_commander.c
     ${CMAKE_CURRENT_LIST_DIR}/xinput/oldxinput.c
-    ${CMAKE_CURRENT_LIST_DIR}/../USB_Host_Driver/msc/fatfs_usb.c
-    ${CMAKE_CURRENT_LIST_DIR}/../USB_Host_Driver/usb.c    
+    ${CMAKE_CURRENT_LIST_DIR}/../USB_Host_driver/msc/fatfs_usb.c
+    ${CMAKE_CURRENT_LIST_DIR}/../USB_Host_driver/usb.c
     )
 
 add_library(tinyusb_config INTERFACE)
+target_link_libraries(USB_Host_Driver PUBLIC tinyusb_config)
 target_include_directories(tinyusb_config INTERFACE ${CMAKE_SOURCE_DIR}../lib/tinyusb/src)
-include(${CMAKE_SOURCE_DIR}/lib/tinyusb/src/CMakeLists.txt)
+include(${CMAKE_SOURCE_DIR}/../pico-sdk/lib/tinyusb/src/CMakeLists.txt)
 target_compile_definitions(tinyusb_config INTERFACE
-    CFG_TUSB_CONFIG_FILE="../../../USB_Host_Driver/tusb_config.h"
+    CFG_TUSB_CONFIG_FILE="${CMAKE_SOURCE_DIR}/USB_Host_driver/tusb_config.h"
 )

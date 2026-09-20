@@ -18,8 +18,13 @@ endif()
 
 # Initialise pico_sdk and tinyusb from installed location
 # (note this can come from environment, CMake cache etc)
-#set(PICO_SDK_PATH "${CMAKE_SOURCE_DIR}/../pico-sdk")
-#set(TINYUSB_PATH "${CMAKE_SOURCE_DIR}/../pico-sdk/lib/tinyusb")
+# for local copy of pico-sdk do the following
+# git submodule add https://github.com/raspberrypi/pico-sdk pico-sdk
+# git submodule update --init --recursive pico-sdk
+set(PICO_SDK_PATH "${CMAKE_SOURCE_DIR}/../pico-sdk")
+
+set(TINYUSB_PATH "${CMAKE_SOURCE_DIR}/../pico-sdk/lib/tinyusb")
+#set(TINYUSB_PATH "${CMAKE_CURRENT_LIST_DIR}/lib/tinyusb")
 
 cmake_minimum_required(VERSION 3.13)
 
@@ -38,16 +43,18 @@ set(CMAKE_CXX_STANDARD 17)
 
 # Declare the Pi Pico Board used
 
-set(PICO_BOARD pimoroni_pico_plus2_rp2350 CACHE STRING "Board type")
+#set(PICO_BOARD pimoroni_pico_plus2_rp2350 CACHE STRING "Board type")
 #set(PICO_BOARD pico_w CACHE STRING "Board type")
+set(PICO_BOARD pico2_w CACHE STRING "Board type")
 
 # Declare the PicoMEM Board
 
-#set(PICOMEM_BOARD "PICOMEM")
+#This appears to be the 1.14 board
+set(PICOMEM_BOARD "PICOMEM")
 #set(PICOMEM_BOARD "PICOMEM_LP")
 #set(PICOMEM_BOARD "PICOMEM_13")
 #set(PICOMEM_BOARD "PICOMEM_15")
-set(PICOMEM_BOARD "PICOMEM_20")
+#set(PICOMEM_BOARD "PICOMEM_20")
 #set(PICOMEM_BOARD "WONDERMCA_10")
 
 # ** UART (Debug) and USB Host definition **
@@ -93,9 +100,10 @@ add_subdirectory(pm_libs)
 add_subdirectory(pm_boards)
 add_subdirectory(lib/picoOled)
 #add_subdirectory(isa_devices/cdrom)
+
 add_subdirectory(lib/rp2040-psram)          # RP2040 PSRAM with DMA
 
-if (PICO_BOARD STREQUAL "pimoroni_pico_plus2_rp2350")
+if (PICO_BOARD STREQUAL "pimoroni_pico_plus2_rp2350" OR PICO_BOARD STREQUAL "pico2_w")
     add_subdirectory(lib/pico_psram)        # RP2350 PSRAM
 endif()
 
@@ -103,12 +111,12 @@ if (PICOMEM_BOARD STREQUAL "WONDERMCA_10")
     add_subdirectory(wondermca)            # WonderMCA MCA bus and devices
 endif()
 
-if (PICOMEM_BOARD STREQUAL "PICOMEM_20" OR PICO_BOARD STREQUAL "pico_w")
+if (PICOMEM_BOARD STREQUAL "PICOMEM_20" OR PICO_BOARD STREQUAL "pico_w" OR PICO_BOARD STREQUAL "pico2_w")
     add_subdirectory(ne2000)               # Add Wifi/ne2000 for pico_w
 endif()
 if (DO_USBHOST)
     add_subdirectory(lib/tusb_xinput)
-    add_subdirectory(USB_Host_Driver2)    
+    add_subdirectory(USB_Host_Driver2)
 endif()
 if (ASYNC_UART)
     add_subdirectory(stdio_async_uart)
@@ -121,6 +129,7 @@ add_executable(picomem
                pm_libs/pico_rtc.cpp                
                dosbox/bios_disk.cpp
 #               RTElib/rtedbg.c
+                syscall_stubs.c
                )
 
 target_include_directories(picomem
@@ -324,7 +333,7 @@ else()  # PicoMEM Boards < 1.5
 
         USE_SPI_PSRAM=1         # 1 To enable the SPI PSRAM (> 0 if Fast RAM=1)  0 for Pimoroni pico plus 2
         USE_SPI_PSRAM_DMA=1     # 1 to use the new code with DMA
-        PSRAM_HEAP=0            # Not possible on RP2040       
+        PSRAM_HEAP=1            # Not possible on RP2040
 
         USE_AUDIO_I2S=1
         PICO_AUDIO_I2S_DATA_PIN=26
@@ -344,6 +353,7 @@ else()  # PicoMEM Boards < 1.5
         USE_HWIRQ=0       # Always 0 (not available)
         USE_HWDMA=0       # Always 0 (not available)
         USE_SBDSP=1
+        SF2_GMGSx=1  #TODO
 # Devices below need PicoMEM 1.5
         USE_GUS=0
         USE_MPU=0        
@@ -426,20 +436,21 @@ endif()  #(PROJECT_TYPE STREQUAL "TEST")
 
 # *******************  Common / Global definitions **************************
 
-if( PICO_BOARD STREQUAL "pico_w")
+if( PICO_BOARD STREQUAL "pico_w" OR PICO_BOARD STREQUAL "pico2_w")
         add_compile_definitions( 
           PM_WIFI_LED=1        # Set to 1 only with Pico W for the LED
         )
 endif()        
 
-if( PICO_BOARD STREQUAL "pico_w" OR PICOMEM_BOARD STREQUAL "PICOMEM_20")
-        add_compile_definitions( 
+if( PICO_BOARD STREQUAL "pico_w" OR PICOMEM_BOARD STREQUAL "PICOMEM_20" OR PICO_BOARD STREQUAL "pico2_w")
+
+add_compile_definitions(
             PM_WIFI=1 
 # - NETWORK Defines -
             USE_NE2000=1
-
 # CYW43 resources : One State Machine (Moved to PIO1, ISA too big)
 # 2 DMA (Automatic claim) for tx, rx
+            CYW43_PIO_CLOCK_DIV_INT=4
             CYW43_SPI_PIO_PREFERRED_PIO=1
             DNS_TABLE_SIZE=2        # reduce the RAM taken by the DNS Table (Usefull ?)            
         ) 
@@ -526,7 +537,7 @@ endif()
 
 target_link_libraries( picomem
 
-#    pico_cyw43_arch_none    
+    pico_cyw43_arch_none
     pico_stdlib
     pico_multicore
     pico_util
@@ -562,7 +573,7 @@ target_link_libraries( picomem
  
 # Add other libraries based on the needs
 
-if( PICO_BOARD STREQUAL "pimoroni_pico_plus2_rp2350")
+if( PICO_BOARD STREQUAL "pimoroni_pico_plus2_rp2350" OR PICO_BOARD STREQUAL "pico2_w")
     target_link_libraries( picomem
     pico_psram
 )
@@ -580,7 +591,7 @@ if (PICOMEM_BOARD STREQUAL "PICOMEM_20")
 )
 endif()
 
-if( PICO_BOARD STREQUAL "pico_w")
+if( PICO_BOARD STREQUAL "pico_w" OR PICO_BOARD STREQUAL "pico2_w")
     target_link_libraries( picomem
        ne2000
 )
@@ -598,7 +609,8 @@ else()
 endif()
 
 if (DO_USBHOST)  # Add Libraries used in USB HOST Mode to the picomem project
-    target_include_directories(picomem PUBLIC "${CMAKE_SOURCE_DIR}/USB_Host_Driver")
+    target_include_directories(picomem PUBLIC "${CMAKE_SOURCE_DIR}/USB_Host_driver")
+    #"${CMAKE_SOURCE_DIR}/USB_Host_driver" "${CMAKE_SOURCE_DIR}/USB_Host_driver" "${CMAKE_SOURCE_DIR}/../pico-sdk/lib/tinyusb/src/host")
     target_link_libraries( picomem   
         tinyusb_host
         tinyusb_board

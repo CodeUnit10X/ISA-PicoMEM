@@ -1,5 +1,8 @@
-add_library(USB_Host_Driver INTERFACE)
-target_include_directories(USB_Host_Driver INTERFACE ${CMAKE_CURRENT_LIST_DIR})
+add_library(USB_Host_Driver STATIC)
+target_include_directories(USB_Host_Driver PUBLIC
+${CMAKE_CURRENT_LIST_DIR}
+${CMAKE_SOURCE_DIR}/lib/FatFs_SPI
+)
 target_link_libraries(USB_Host_Driver INTERFACE tinyusb_board)
 target_sources(USB_Host_Driver INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/hid_app.c

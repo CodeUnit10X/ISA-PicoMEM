@@ -1,6 +1,41 @@
 
-
 // RP2350 ISA Bus Code : Not Working, Work in progress
+
+
+#define DO_MEMR 2
+#define DO_IOR  1
+
+
+__force_inline void pm_do_ior(void)
+{
+  ISA_WasRead=true;
+  #if BOARD_PM15
+  // 0x380e, // 16: wait   0 gpio, 14      side 2
+  pio_sm_put(isa_pio, isa_bus_sm, 0x380e); // Do IOR (wait 0 gpio PIN_A18_IR)
+  #else
+  pio_sm_put(isa_pio, isa_bus_sm, DO_IOR); // Do IOR (wait 0 gpio PIN_A18_IR)
+  #endif
+} // Data is sent after in the core1
+
+// Start of a Memory Read with Wait States added
+__force_inline void pm_do_memr(uint32_t ISA_Data)
+{
+
+  #if BOARD_PM15
+  //0x380c, // 18: wait   0 gpio, 12      side 2
+  pio_sm_put(isa_pio, isa_bus_sm, 0x380c); // 2nd Write : Do MEMR (wait 0 gpio PIN_A16_MR)
+  #else
+  pio_sm_put(isa_pio, isa_bus_sm, DO_MEMR);                  // 2nd Write : Do MEMR (wait 0 gpio PIN_A16_MR)
+  #endif
+  pio_sm_put(isa_pio, isa_bus_sm, 0x00ffff00u | ISA_Data);   // 3nd Write : Send the Data to the CPU (Read Cycle)
+  asm volatile ("nop");                                      // Force the compiler to not prepare the next instruction in advanced : One Cycle less
+  // Added to wait until the PIO Send the Data
+  #if TIMING_DEBUG
+  //gpio_put(PIN_IRQ, 1);
+  #endif
+  ISA_Data = pio_sm_get_blocking(isa_pio, isa_bus_sm);       // Wait that the data is sent to wait for the next ALE
+}
+
 
 //***********************************************************************************************//
 //*         CORE 1 Main : Wait for the ISA Bus events, emulate RAM and ROM                      *//

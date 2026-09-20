@@ -34,7 +34,7 @@ If not, see <https://www.gnu.org/licenses/>.
 #include "hardware/irq.h"
 #include "hardware/vreg.h"
 
-#if !(defined(RASPBERRYPI_PICO2) || defined(PIMORONI_PICO_PLUS2_RP2350))
+#if !(defined(RASPBERRYPI_PICO2) || !defined(PIMORONI_PICO_PLUS2_RP2350) || !defined(RASPBERRYPI_PICO2_W))
 #include "hardware/regs/vreg_and_chip_reset.h"
 #endif
 
@@ -342,7 +342,7 @@ PM_DP_RAM[0] = 0x12; //ID of The PicoMEM BIOS RAM  (Magic ID)
 #if ISA_DBG_IO
 #include "pm_isa_test.h"
 #else
-#if defined(RASPBERRYPI_PICO2) || defined(PIMORONI_PICO_PLUS2_RP2350)
+#if defined(RASPBERRYPI_PICO2) || defined(PIMORONI_PICO_PLUS2_RP2350) || defined(RASPBERRYPI_PICO2_W)
 
 #if BOARD_PM15 || BOARD_PM20
 //#include "pm_isa_debug.h"

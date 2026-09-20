@@ -53,7 +53,7 @@ void PIC_Init() {
 
   if (alarm_pool==NULL) {
     alarm_pool = alarm_pool_create(2, PICO_TIME_DEFAULT_ALARM_POOL_MAX_TIMERS);
-#if defined(RASPBERRYPI_PICO2) || defined(PIMORONI_PICO_PLUS2_RP2350)
+#if defined(RASPBERRYPI_PICO2) || defined(PIMORONI_PICO_PLUS2_RP2350)  || defined(RASPBERRYPI_PICO2_W)
     irq_set_priority(TIMER0_IRQ_2, 0x80 );   // PicoMEM : Must not be highest (for the DMA IRQ)
 #else
     irq_set_priority(TIMER_IRQ_2, 0x80 );    // PicoMEM : Must not be highest (for the DMA IRQ)

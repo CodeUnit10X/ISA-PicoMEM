@@ -42,7 +42,7 @@
 #include "pio_usb.h"
 #include "tusb.h"
 #include "usb_midi_host.h"
-#ifdef RASPBERRYPI_PICO_W
+#if (defined(RASPBERRYPI_PICO_W) || defined(RASPBERRYPI_PICO2_W))
 #include "pico/cyw43_arch.h"
 #endif
 // Because the PIO USB code runs in core 1
@@ -135,7 +135,7 @@ int main()
     while(core1_booting) {
     }
     printf("Pico MIDI Host Example\r\n");
-#ifdef RASPBERRYPI_PICO_W
+#if (defined(RASPBERRYPI_PICO_W) || defined(RASPBERRYPI_PICO2_W))
     // The Pico W LED is attached to the CYW43 WiFi/Bluetooth module
     // Need to initialize it so the the LED blink can work
     // This must be called after tuh_init(). Waiting for core1 to

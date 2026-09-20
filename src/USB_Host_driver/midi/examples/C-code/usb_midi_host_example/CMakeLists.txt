@@ -28,6 +28,10 @@ if(${PICO_BOARD} MATCHES "pico_w")
 message("board is pico_w")
 # add additional compile and link options
 target_link_libraries(usb_midi_host_example pico_cyw43_arch_none)
+elif(${PICO_BOARD} MATCHES "pico2_w")
+message("board is pico2_w")
+# add additional compile and link options
+target_link_libraries(usb_midi_host_example pico_cyw43_arch_none)
 else()
 message("board is pico")
 endif()
